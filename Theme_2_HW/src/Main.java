@@ -3,6 +3,8 @@ public class Main {
     public static void main(String[] args) {
 
         String  [][] arr1 = new String[4][4];
+        arr1 [0][0] = "1";
+        arr1 [0][1] = "2";
 
 //3. В методе main() вызвать полученный метод, обработать возможные исключения MySizeArrayException и
 // MyArrayDataException и вывести результат расчета.
