@@ -12,6 +12,7 @@ public class MainWindow extends JFrame {
     private JList<String> list;
     private DefaultListModel<String> listModel;
     private JPanel panel_1;
+    private JMenuBar mainMenu;
 
 
 
@@ -22,18 +23,7 @@ public class MainWindow extends JFrame {
         setBounds(200,200,500,500);
 
 
-        button = new JButton("Send");
-        button.setPreferredSize(new Dimension(100, 50));
-        button.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                listModel.add(0,"Name: " + textField.getText());
-            }
-        });
-
-
-
-        JMenuBar mainMenu = new JMenuBar();
+        mainMenu = new JMenuBar();
         JMenu mFile = new JMenu("Menu");
         JMenuItem miFileNew = new JMenuItem("Log out");
         JMenuItem miFileExit = new JMenuItem("Exit");
@@ -51,6 +41,18 @@ public class MainWindow extends JFrame {
         });
 
 
+        button = new JButton("Send");
+        button.setPreferredSize(new Dimension(100, 50));
+        button.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                listModel.add(0,"Name: " + textField.getText());
+                textField.setText("");
+            }
+        });
+
+
+
 
         textField = new JTextField();
         textField.setPreferredSize(new Dimension(350, 50));
@@ -58,6 +60,7 @@ public class MainWindow extends JFrame {
             @Override                                                   //---> Отработка события нажатия ENTER;
             public void actionPerformed(ActionEvent e) {
                 listModel.add(0,"Name: " + textField.getText());
+                textField.setText("");
             }
         });
 
