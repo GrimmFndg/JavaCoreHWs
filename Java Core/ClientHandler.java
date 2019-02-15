@@ -1,19 +1,33 @@
-package Theme_6;
+package Theme_7;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+
 public class ClientHandler {
 
-    private Socket socket;
-    private Thread handleThread;
-    private DataInputStream inp;
-    private DataOutputStream out;
+    private static final Pattern MESSAGE_PATTERN = Pattern.compile("^/w (\\w+) (.+)", Pattern.MULTILINE);
+    private final Thread handleThread;
+    private final DataInputStream inp;
+    private final DataOutputStream out;
+    private final ChatServer server;
+    private final String username;
+    private final Socket socket;
 
-    public ClientHandler(Socket socket) throws IOException {
+    public ClientHandler(String username, Socket socket, ChatServer server) throws IOException {
+        this.username = username;
         this.socket = socket;
+        this.server = server;
         this.inp = new DataInputStream(socket.getInputStream());
         this.out = new DataOutputStream(socket.getOutputStream());
 
@@ -23,20 +37,28 @@ public class ClientHandler {
                 try {
                     while (!Thread.currentThread().isInterrupted()) {
                         String msg = inp.readUTF();
-                        System.out.println("Message: " + msg);
-                        System.out.println();
-                        out.flush();
+                        System.out.printf("Message from user %s: %s%n", username, msg);
+                        Matcher matcher = MESSAGE_PATTERN.matcher(msg);
+
+                        if (matcher.matches()){
+                            String user = matcher.group(1);
+                            String text = matcher.group(2);
+                        }
+
+
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
+                } finally {
+                    System.out.printf("Client %s disconnected%n", username);
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
         handleThread.start();
-    }
-
-    public void sendMessage(String message) throws IOException {
-        out.writeUTF(message);
-        out.flush();
     }
 }
