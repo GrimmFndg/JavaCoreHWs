@@ -16,21 +16,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-
-import ru.geekbrains.lesson7.auth.AuthService;
-import ru.geekbrains.lesson7.auth.AuthServiceImpl;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class ChatServer {
 
     private static final Pattern AUTH_PATTERN = Pattern.compile("^/auth (\\w+) (\\w+)$");
