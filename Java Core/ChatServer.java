@@ -1,6 +1,7 @@
 package Theme_7;
 
 
+
 import Theme_7.Authentication.AuthService;
 import Theme_7.Authentication.AuthServiceImpl;
 
@@ -9,21 +10,20 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 
 public class ChatServer {
 
     private static final Pattern AUTH_PATTERN = Pattern.compile("^/auth (\\w+) (\\w+)$");
-    private static final Pattern MESSAGE_PATTERN = Pattern.compile("^/w (\\w+) (\\w+)$");
 
     private AuthService authService = new AuthServiceImpl();
 
-    private Map<String, ClientHandler> clientHandlerMap = Collections.synchronizedMap(new HashMap<>());
+    private Map<String, ClientHandler> clientHandlerMap = new ConcurrentHashMap<>();
+
 
     public static void main(String[] args) {
         ChatServer chatServer = new ChatServer();
@@ -36,6 +36,7 @@ public class ChatServer {
             while (true) {
                 Socket socket = serverSocket.accept();
 
+
                 DataInputStream inp = new DataInputStream(socket.getInputStream());
                 DataOutputStream out = new DataOutputStream(socket.getOutputStream());
                 System.out.println("New client connected!");
@@ -46,11 +47,40 @@ public class ChatServer {
                     if (matcher.matches()) {
                         String username = matcher.group(1);
                         String password = matcher.group(2);
+
+                        Thread timer = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    ClientHandler clientHandler = clientHandlerMap.get(username);
+                                    Thread.sleep(120_000);
+                                    if (clientHandler.isConnected == false){
+                                        try {
+                                            System.out.println("Socket closed");
+                                            socket.close();
+
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }else {
+
+                                        System.out.println("Клиент подключен.");
+                                    }
+
+
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+
                         if (authService.authUser(username, password)) {
                             clientHandlerMap.put(username, new ClientHandler(username, socket, this));
                             out.writeUTF("/auth successful");
                             out.flush();
                             System.out.printf("Authorization for user %s successful%n", username);
+                            ClientHandler clientHandler = clientHandlerMap.get(username);
+                            clientHandler.isConnected = true;
                         } else {
                             System.out.printf("Authorization for user %s failed%n", username);
                             out.writeUTF("/auth fails");
@@ -66,34 +96,21 @@ public class ChatServer {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-                while (true) {
-                    try{
-                        String message = inp.readUTF();
-                        Matcher matcher = MESSAGE_PATTERN.matcher(message);
-                        if (matcher.matches()) {
-                            String userTo = matcher.group(1);
-                            String msg = matcher.group(2);
-                            sendMessage(userTo,"userFrom",msg);
-                        }
-
-                    } catch (IOException e) {
-                            e.printStackTrace();
-                    }
-                }
-
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-
-    public void sendMessage(String userTo, String userFrom, String msg) {
-
-        if (clientHandlerMap.containsKey(userTo)){
-                clientHandlerMap.get(userTo)
-            }
+    public void sendMessage(String userTo, String userFrom, String msg) throws IOException {
+        ClientHandler clientHandler = clientHandlerMap.get(userTo);
+        if (clientHandler != null) {
+            clientHandler.sendMessage(userFrom, msg);
         }
     }
+
+    public void unsubscribe(ClientHandler clientHandler) {
+        clientHandlerMap.remove(clientHandler.getUsername());
+    }
+
 }
